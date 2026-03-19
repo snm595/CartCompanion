@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Payment — Cart Companion{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Payment</h1>
+    <p>Select your preferred payment method</p>
+</div>
+
+<div class="simple-page">
+    <ul>
+        <li>💳 Credit / Debit Card</li>
+        <li>🅿️ PayPal</li>
+        <li>🏦 Net Banking</li>
+        <li>📦 Cash on Delivery</li>
+    </ul>
+    <p>Thank you for shopping with Cart Companion!</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">← Back to Home</a>
+</div>
+{% endblock %}

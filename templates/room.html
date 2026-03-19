@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Room {{ room_id }} — Cart Companion{% endblock %}
+
+{% block content %}
+<div class="room-wrapper">
+
+    <!-- Hero Card -->
+    <div class="room-hero">
+        <div>
+            <h2>Video Room</h2>
+            <div class="room-id-tag" id="room-id-display">
+                <span style="font-size:11px;opacity:0.6;">ROOM</span>
+                {{ room_id }}
+            </div>
+        </div>
+        <div id="status" class="room-status-pill waiting">
+            <span class="status-dot"></span>
+            <span id="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="room-controls">
+        <button id="btn-start-call" onclick="startCall()" class="btn btn-primary btn-lg">
+            📞 Start Call
+        </button>
+        <button id="btn-share-screen" onclick="shareScreen()" class="btn btn-purple btn-lg">
+            🖥️ Share Screen
+        </button>
+        <button id="btn-hang-up" onclick="hangUp()" class="btn btn-danger btn-lg" style="display:none;">
+            ✕ Hang Up
+        </button>
+        <button onclick="copyRoomLink()" class="btn btn-outline btn-lg">
+            📋 Copy Link
+        </button>
+    </div>
+
+    <!-- Video Grid -->
+    <div class="video-grid">
+        <div class="video-panel">
+            <video id="local-video" autoplay muted playsinline></video>
+            <span class="video-label">👤 You</span>
+        </div>
+        <div class="video-panel">
+            <video id="remote-video" autoplay playsinline></video>
+            <span class="video-label">👥 Remote</span>
+        </div>
+    </div>
+
+    <!-- Log -->
+    <div id="log" class="room-log"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+<script>
+const ROOM_ID = "{{ room_id }}";
+const USERNAME = "User_" + Math.random().toString(36).substring(2, 7);
+const ICE_SERVERS = { iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+]};
+
+let socket = null, peerConnection = null, localStream = null, isInitiator = false;
+const localVideo = document.getElementById('local-video');
+const remoteVideo = document.getElementById('remote-video');
+const statusEl = document.getElementById('status');
+const statusText = document.getElementById('status-text');
+const logEl = document.getElementById('log');
+
+function log(msg) {
+    console.log(msg);
+    const d = document.createElement('div');
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setStatus(text, state) {
+    statusText.textContent = text;
+    statusEl.className = 'room-status-pill ' + state;
+}
+
+function connectSocket() {
+    socket = io();
+    socket.on('connect', () => {
+        log('Connected to server');
+        setStatus('Waiting for another user...', 'waiting');
+        socket.emit('join_room', { room_id: ROOM_ID, username: USERNAME });
+        log(`Joined room: ${ROOM_ID} as ${USERNAME}`);
+    });
+    socket.on('disconnect', () => { log('Disconnected'); setStatus('Disconnected', 'disconnected'); });
+    socket.on('user_joined', (d) => { log(`${d.username} joined`); setStatus(`${d.username} is here — Start Call`, 'waiting'); });
+    socket.on('user_left', (d) => { log(`${d.username} left`); setStatus('Waiting...', 'waiting'); hangUp(); });
+    socket.on('signal', async (d) => {
+        log(`Signal: ${d.signal_type}`);
+        if (d.signal_type === 'offer') await handleOffer(d.signal_data);
+        else if (d.signal_type === 'answer') await handleAnswer(d.signal_data);
+        else if (d.signal_type === 'ice_candidate') await handleIceCandidate(d.signal_data);
+    });
+}
+
+function createPeerConnection() {
+    peerConnection = new RTCPeerConnection(ICE_SERVERS);
+    peerConnection.onicecandidate = (e) => {
+        if (e.candidate) socket.emit('signal', { room_id: ROOM_ID, signal_type: 'ice_candidate', signal_data: e.candidate });
+    };
+    peerConnection.ontrack = (e) => { log('Remote stream received'); remoteVideo.srcObject = e.streams[0]; };
+    peerConnection.onconnectionstatechange = () => {
+        const s = peerConnection.connectionState;
+        log(`Connection: ${s}`);
+        if (s === 'connected') { setStatus('Call connected', 'connected'); document.getElementById('btn-hang-up').style.display = 'inline-flex'; }
+        else if (s === 'disconnected' || s === 'failed') setStatus('Call ended', 'disconnected');
+    };
+    if (localStream) localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+    return peerConnection;
+}
+
+async function getLocalMedia(screen = false) {
+    try {
+        localStream = screen
+            ? await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+            : await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        log(screen ? 'Screen sharing started' : 'Camera started');
+        return true;
+    } catch (e) { log(`Media error: ${e.message}`); alert('Could not access camera: ' + e.message); return false; }
+}
+
+async function startCall() {
+    isInitiator = true; log('Starting call...');
+    if (!await getLocalMedia(false)) return;
+    createPeerConnection();
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('signal', { room_id: ROOM_ID, signal_type: 'offer', signal_data: offer });
+    log('Offer sent'); setStatus('Waiting for answer...', 'waiting');
+}
+
+async function shareScreen() {
+    isInitiator = true; log('Starting screen share...');
+    if (!await getLocalMedia(true)) return;
+    createPeerConnection();
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('signal', { room_id: ROOM_ID, signal_type: 'offer', signal_data: offer });
+    log('Screen share offer sent'); setStatus('Screen sharing...', 'waiting');
+    localStream.getVideoTracks()[0].onended = () => { log('Screen share stopped'); hangUp(); };
+}
+
+async function handleOffer(offer) {
+    log('Handling offer...');
+    if (!localStream && !await getLocalMedia(false)) return;
+    createPeerConnection();
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    socket.emit('signal', { room_id: ROOM_ID, signal_type: 'answer', signal_data: answer });
+    log('Answer sent'); setStatus('Connecting...', 'waiting');
+}
+
+async function handleAnswer(answer) {
+    if (peerConnection) await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+}
+
+async function handleIceCandidate(candidate) {
+    if (peerConnection) { try { await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) { log(`ICE error: ${e.message}`); } }
+}
+
+function hangUp() {
+    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    localVideo.srcObject = null; remoteVideo.srcObject = null;
+    document.getElementById('btn-hang-up').style.display = 'none';
+    log('Call ended'); setStatus('Call ended — click Start Call', 'disconnected');
+}
+
+function copyRoomLink() {
+    navigator.clipboard.writeText(location.href).then(() => alert('Room link copied!')).catch(() => prompt('Copy:', location.href));
+}
+
+window.addEventListener('beforeunload', () => { if (socket) socket.emit('leave_room', { room_id: ROOM_ID, username: USERNAME }); hangUp(); });
+connectSocket();
+</script>
+{% endblock %}

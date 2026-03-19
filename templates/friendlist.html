@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Friends — Cart Companion{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Friends</h1>
+  <p>Add your shopping buddies and start a video room together</p>
+</div>
+
+<div class="friends-container">
+  <form method="POST" id="add-friend-form" class="friend-form">
+    <input type="text" name="friend-name" id="friend-name" placeholder="Friend's name" required>
+    <input type="text" name="friend-number" id="friend-number" placeholder="Phone number" required>
+    <button type="submit">Add Friend</button>
+  </form>
+
+  <ul class="friend-list" id="friend-list">
+    {% for friend in friends %}
+    <li>
+      <div class="friend-details">
+        <h3>{{ friend['name'] }}</h3>
+        <p>{{ friend['number'] }}</p>
+      </div>
+      <div class="friend-actions">
+        <div class="friend-options">
+          <button class="share-screen-button" type="button">Share Screen</button>
+          <button class="chat-button" type="button">Chat</button>
+        </div>
+        <form action="{{ url_for('remove_friend', friend_id=friend['_id']) }}" method="POST" style="display:inline;">
+          <button type="submit" class="remove-friend-btn">Remove</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Room System -->
+  <div class="room-system-card">
+    <h2>📹 Video Rooms</h2>
+
+    <div class="room-actions">
+      <button id="btn-create-room" class="btn btn-gradient">+ Create New Room</button>
+    </div>
+
+    <div class="room-actions">
+      <input type="text" id="join-room-input" placeholder="Paste a Room ID to join...">
+      <button id="btn-join-room" class="btn btn-success">Join Room</button>
+    </div>
+
+    <div id="room-feedback" class="room-feedback"></div>
+  </div>
+
+  <div id="video-container">
+    <video id="screen-sharing-video" autoplay></video>
+  </div>
+</div>
+
+<div id="chat-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/friendlist.js') }}"></script>
+<script>
+  document.getElementById('btn-create-room').addEventListener('click', async () => {
+    const res = await fetch('/create_room', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      const fb = document.getElementById('room-feedback');
+      fb.style.display = 'block';
+      fb.innerHTML = `Room created! ID: <strong>${data.room_id}</strong> — <a href="/room/${data.room_id}">Enter Room →</a>`;
+    }
+  });
+
+  document.getElementById('btn-join-room').addEventListener('click', () => {
+    const id = document.getElementById('join-room-input').value.trim();
+    if (id) window.location.href = '/room/' + id;
+    else alert('Enter a Room ID first');
+  });
+
+  document.getElementById('join-room-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-join-room').click();
+  });
+</script>
+{% endblock %}

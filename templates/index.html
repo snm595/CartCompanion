@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Cart Companion — Shop Smart Together{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Shop Smart,<br>Together.</h1>
+    <p>Browse curated categories and discover products you'll love — all in one place.</p>
+</div>
+
+<div class="category-grid">
+    <div class="category-card">
+        <div class="card-img-wrap">
+            <img src="{{ url_for('static', filename='images/i1.jpeg') }}" alt="Clothes">
+        </div>
+        <div class="card-body">
+            <h3>Clothes</h3>
+            <a href="{{ url_for('clothes') }}" class="shop-btn">Shop Now →</a>
+        </div>
+    </div>
+    <div class="category-card">
+        <div class="card-img-wrap">
+            <img src="{{ url_for('static', filename='images/i2.jpeg') }}" alt="Mobiles">
+        </div>
+        <div class="card-body">
+            <h3>Mobiles</h3>
+            <a href="{{ url_for('mobiles') }}" class="shop-btn">Shop Now →</a>
+        </div>
+    </div>
+    <div class="category-card">
+        <div class="card-img-wrap">
+            <img src="{{ url_for('static', filename='images/i3.jpg') }}" alt="Furniture">
+        </div>
+        <div class="card-body">
+            <h3>Furniture</h3>
+            <a href="{{ url_for('furniture_page') }}" class="shop-btn">Shop Now →</a>
+        </div>
+    </div>
+    <div class="category-card">
+        <div class="card-img-wrap">
+            <img src="{{ url_for('static', filename='images/i4.jpg') }}" alt="Appliances">
+        </div>
+        <div class="card-body">
+            <h3>Appliances</h3>
+            <a href="{{ url_for('appliances_page') }}" class="shop-btn">Shop Now →</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Your Cart — Cart Companion{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Your Cart</h1>
+    <p>Review your items before checkout</p>
+</div>
+
+<div class="cart-container">
+    <div class="cart-items" id="cart-items"></div>
+
+    <div class="cart-summary" id="cart-summary" style="display: none;">
+        <div class="total-amount" id="total-amount">Total: ₹0</div>
+        <button class="buy-button" id="buy-button">Proceed to Buy</button>
+
+        <div class="payment-options" id="payment-options" style="display: none;">
+            <h3>Select a Payment Method</h3>
+            <div class="payment-option" id="credit-card-option">Credit/Debit Card</div>
+            <div class="payment-option" id="paypal-option">PayPal</div>
+            <div class="payment-option" id="upi-option">UPI</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

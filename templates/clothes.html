@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Clothes — Cart Companion{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Clothes Collection</h1>
+    <p>Browse our latest clothing</p>
+</div>
+
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+        <h3>{{ product.name }}</h3>
+        <p class="price">₹{{ product.price }}</p>
+        <button class="add-to-cart" data-name="{{ product.name }}" data-price="{{ product.price }}"
+            data-image="{{ product.image }}">Add to Cart</button>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

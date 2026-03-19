@@ -1,0 +1,161 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Rest of your CSS styles */
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: blue;
+}
+
+main {
+    padding: 20px;
+}
+
+.cart-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.cart-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    width: 200px;
+    text-align: center;
+}
+
+.cart-item img {
+    width: 100%;
+    height: auto;
+}
+
+.total-amount {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.5rem;
+}
+
+.buy-button {
+    display: block;
+    width: 200px;
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+}
+
+.payment-options {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.payment-option {
+    padding: 10px;
+    background-color: #f4f4f4;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+footer {
+    text-align: center;
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+}
+.cart-item {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.cart-item img {
+    width: 100px;
+    height: auto;
+    margin-right: 20px;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.quantity-controls button {
+    font-size: 20px;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.cart-item {
+    display: flex;
+    flex-direction: column; /* Stack the image and buttons vertically */
+    align-items: center;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.cart-item img {
+    width: 150px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.cart-item h3 {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.cart-item p {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.quantity-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.quantity-controls button {
+    font-size: 20px;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+.remove-item {
+    background-color: blue;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.remove-item:hover {
+    background-color: black;
+}
