@@ -189,7 +189,3 @@ http://127.0.0.1:5002
 ## ⭐ License
 
 This project is for educational and demonstration purposes.
-
-
-Just tell me 👍
-```
