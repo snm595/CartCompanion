@@ -47,6 +47,17 @@
         </div>
     </div>
 
+    <!-- Invite Friend -->
+    <div class="invite-section" style="margin-top: 32px; text-align: center; padding: 24px; background: var(--bg-card); border-radius: var(--r-lg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+        <h3 style="margin-bottom: 16px; font-weight: 600; font-size: 18px;">Invite a Buddy to Room</h3>
+        <form id="invite-friend-form" class="friend-form" style="justify-content: center; margin-bottom: 0;">
+            <input type="text" id="invite-name" placeholder="Friend's Name" required style="max-width: 220px;" autocomplete="off">
+            <input type="text" id="invite-number" placeholder="Phone Number" required style="max-width: 220px;" autocomplete="off">
+            <button type="submit" class="btn btn-gradient">Invite & Save Friend</button>
+        </form>
+        <div id="invite-feedback" style="display: none; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--emerald);"></div>
+    </div>
+
     <!-- Log -->
     <div id="log" class="room-log"></div>
 </div>
@@ -179,6 +190,48 @@ function hangUp() {
 function copyRoomLink() {
     navigator.clipboard.writeText(location.href).then(() => alert('Room link copied!')).catch(() => prompt('Copy:', location.href));
 }
+
+document.getElementById('invite-friend-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('invite-name').value.trim();
+    const number = document.getElementById('invite-number').value.trim();
+    const fb = document.getElementById('invite-feedback');
+    const btn = e.target.querySelector('button');
+    
+    if (!name || !number) return;
+    
+    try {
+        btn.disabled = true;
+        btn.innerHTML = 'Sending...';
+        const res = await fetch('/api/add_friend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, number })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            fb.textContent = `Invite sent to ${name}! They are saved to your Friends. (Share this link: ${location.href})`;
+            fb.style.color = 'var(--emerald)';
+            fb.style.display = 'block';
+            document.getElementById('invite-name').value = '';
+            document.getElementById('invite-number').value = '';
+            setTimeout(() => { fb.style.display = 'none'; }, 8000);
+        } else {
+            fb.textContent = 'Error adding friend.';
+            fb.style.color = 'var(--rose)';
+            fb.style.display = 'block';
+        }
+    } catch(err) {
+        console.error(err);
+        fb.textContent = 'Network error: ' + err.message;
+        fb.style.color = 'var(--rose)';
+        fb.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Invite & Save Friend';
+    }
+});
 
 window.addEventListener('beforeunload', () => { if (socket) socket.emit('leave_room', { room_id: ROOM_ID, username: USERNAME }); hangUp(); });
 connectSocket();

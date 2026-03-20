@@ -16,7 +16,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # MongoDB Configuration
 # ---------------------------------------------------------------------------
 try:
-    client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=1000)
+    client = MongoClient("mongodb://localhost:27017/cart-companion", serverSelectionTimeoutMS=1000)
     client.admin.command('ping')
     db = client['products_db']
     friends_collection = db['friends']
@@ -142,31 +142,37 @@ def payment():
 # Friend List Routes (with in-memory fallback)
 # ---------------------------------------------------------------------------
 
-@app.route('/friendlist', methods=['GET', 'POST'])
+@app.route('/friendlist', methods=['GET'])
 def friendlist():
-    global friend_id_counter
-    friends = []
-
-    if request.method == 'POST':
-        name = request.form.get('friend-name')
-        number = request.form.get('friend-number')
-        if name and number:
-            if mongodb_available:
-                friends_collection.insert_one({'name': name, 'number': number})
-            else:
-                friend_id_counter += 1
-                local_friends.append({
-                    '_id': str(friend_id_counter),
-                    'name': name,
-                    'number': number
-                })
-
     if mongodb_available:
         friends = list(friends_collection.find())
     else:
         friends = local_friends
 
     return render_template('friendlist.html', friends=friends)
+
+
+@app.route('/api/add_friend', methods=['POST'])
+def add_friend_api():
+    global friend_id_counter
+    
+    data = request.json or {}
+    name = data.get('name')
+    number = data.get('number')
+    
+    if name and number:
+        if mongodb_available:
+            friends_collection.insert_one({'name': name, 'number': number})
+        else:
+            friend_id_counter += 1
+            local_friends.append({
+                '_id': str(friend_id_counter),
+                'name': name,
+                'number': number
+            })
+        return jsonify({'success': True})
+        
+    return jsonify({'success': False, 'error': 'Missing name or number'}), 400
 
 
 @app.route('/remove_friend/<friend_id>', methods=['POST'])
